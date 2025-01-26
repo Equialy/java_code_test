@@ -1,0 +1,5 @@
+.venv_wallet
+.env
+.env.docker-compose
+.idea
+__pycache__/

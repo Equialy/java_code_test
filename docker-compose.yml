@@ -1,0 +1,20 @@
+services:
+  books_library:
+    build:
+      context: .
+    container_name: wallet_app
+    env_file:
+      - .env.docker-compose
+    depends_on:
+      - db
+    command: ["/java_code_test/docker/wait-for-db.sh", "db", "/java_code_test/docker/app.sh" ]
+    ports:
+      - 8003:8000
+  db:
+    image: postgres:17
+    container_name: wallet_app_db
+    environment:
+      - POSTGRES_USER=${DB__USER}
+      - POSTGRES_PASSWORD=${DB__PASSWORD}
+      - POSTGRES_DB=${DB__NAME}
+

@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from httpx import AsyncClient
 
@@ -13,6 +15,28 @@ async def test_create_wallet(balance, status_code, ac_client: AsyncClient):
     user_data = response.json()
     if status_code == 201:
         return user_data["uuid"]
+
+
+@pytest.mark.parametrize("balance, status_code", [(100, 201)])
+async def test_parallel_deposits(balance, status_code, ac_client: AsyncClient):
+    response = await ac_client.post("/api/v1/wallets/", json={"balance": str(balance)})
+    assert response.status_code == status_code
+    wallet_id = response.json()["uuid"]
+
+    async def deposit():
+        response = await ac_client.post(f"/api/v1/wallets/{wallet_id}/deposit",
+            json={"uuid": str(wallet_id), "amount": "10.00"})
+        await asyncio.sleep(0.01)
+        return response
+
+    tasks = [deposit() for _ in range(10)]
+    results = await asyncio.gather(*tasks)
+    for r in results:
+        assert r.status_code == 200
+
+    response = await ac_client.get(f"/api/v1/wallets/{wallet_id}")
+    assert response.json()["balance"] == "200.00"
+
 
 
 @pytest.fixture(scope="function")

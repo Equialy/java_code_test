@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Protocol
 from uuid import UUID
 
@@ -11,19 +12,18 @@ from ..schemas.schemas import WalletUpdateSchema, WalletCreate
 
 class WalletRepositoryProtocol(Protocol):
 
-    async def get_by_id(self,  wallet_id: UUID) -> WalletSchema:
+    async def get_by_id(self, wallet_id: UUID) -> WalletSchema:
         ...
 
     async def create(self, create_objects: WalletCreate) -> WalletSchema:
         ...
 
-    async def update(self,  wallet_id: UUID, **update_object) -> WalletSchema:
+    async def deposit_wallet(self, wallet_id: UUID, amount: Decimal) -> WalletSchema:
         ...
 
-class WalletRepositoryFactoryProtocol(Protocol):
-
-    async def make(self) -> WalletRepositoryProtocol:
+    async def withdraw_wallet(self, wallet_id: UUID, amount: Decimal) -> WalletSchema:
         ...
+
 
 class WalletRepositoryImpl:
 
@@ -31,22 +31,30 @@ class WalletRepositoryImpl:
         self.session = session
         self.model = Wallet
 
-    async def create(self, create_objects: WalletCreate) :
-        stmt =sa.insert(self.model).values(create_objects.model_dump()).returning(self.model)
+    async def create(self, create_objects: WalletCreate):
+        stmt = sa.insert(self.model).values(create_objects.model_dump()).returning(self.model)
         model = await self.session.execute(stmt)
         result = model.scalar_one()
         return result
 
-    async def get_by_id(self, wallet_id: UUID) :
-        query = sa.select(self.model).where(self.model.uuid == str(wallet_id))
+    async def get_by_id(self, wallet_id: UUID):
+        query = sa.select(self.model).where(self.model.uuid == str(wallet_id)).with_for_update()
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def update(self, wallet_id: UUID, **update_object: dict) :
-        stmt =(sa.update(self.model)
-               .where(self.model.uuid == wallet_id)
-               .values(**update_object)
-               .returning(self.model))
+    async def deposit_wallet(self, wallet_id: UUID, amount: Decimal):
+        stmt = (sa.update(self.model)
+                .where(self.model.uuid == wallet_id)
+                .values(balance=self.model.balance + amount)
+                .returning(self.model))
         result = await self.session.execute(stmt)
         return result.scalar_one()
 
+    async def withdraw_wallet(self, wallet_id: UUID, amount: Decimal):
+        stmt = (sa.update(self.model)
+                .where(self.model.uuid == wallet_id,
+                       self.model.balance >= amount)
+                .values(balance=self.model.balance - amount)
+                .returning(self.model))
+        result = await self.session.execute(stmt)
+        return result.scalar_one()

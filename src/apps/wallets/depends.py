@@ -3,8 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.apps.wallets.repositories import WalletRepositoryImpl, WalletRepositoryFactoryProtocol, \
-    WalletRepositoryProtocol
+from src.apps.wallets.repositories import WalletRepositoryImpl, WalletRepositoryProtocol
 from src.apps.wallets.services import WalletServiceProtocol, WalletServiceImpl
 from src.core.db import get_async_session
 
@@ -23,4 +22,4 @@ def get_wallet_service(users_factory_repositories: WalletFactoryRepository) -> W
     return WalletServiceImpl(users_factory_repositories)
 
 
-UserService = Annotated[WalletServiceProtocol, Depends(get_wallet_service)]
+WalletService = Annotated[WalletServiceProtocol, Depends(get_wallet_service)]

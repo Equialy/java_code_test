@@ -1,5 +1,3 @@
-import uuid
-from typing import Any, Generic, TypeVar
 from uuid import UUID
 from fastapi import HTTPException, status
 
@@ -9,10 +7,6 @@ class RecordNotFoundError(Exception):
         super().__init__(*args)
         self.uuid = uuid
         self.message = message
-
-
-
-
 
 
 class ModelAlreadyExistsError(Exception):
@@ -35,8 +29,6 @@ class ValidationError(Exception):
         super().__init__(*args)
         self.field = field
         self.message = message
-
-
 
 
 class FileNotFound(HTTPException):

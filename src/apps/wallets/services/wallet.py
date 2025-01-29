@@ -1,9 +1,8 @@
 from typing import Protocol
 from uuid import UUID
-from decimal import Decimal
 
 from src.apps.wallets.exceptions import NotFoundError, BalanceError
-from src.apps.wallets.repositories import WalletRepositoryFactoryProtocol, WalletRepositoryProtocol
+from src.apps.wallets.repositories import WalletRepositoryProtocol
 from src.apps.wallets.schemas import WalletSchema
 from src.apps.wallets.schemas.schemas import WalletCreate, WalletDataOperationsSchema
 
@@ -11,9 +10,9 @@ from src.apps.wallets.schemas.schemas import WalletCreate, WalletDataOperationsS
 class WalletServiceProtocol(Protocol):
 
     async def create_wallet(self, create_objects: WalletCreate) -> WalletSchema:
-
         ...
-    async def get_wallet_by_id(self,wallet_id: UUID ) -> WalletSchema:
+
+    async def get_wallet_by_id(self, wallet_id: UUID) -> WalletSchema:
         ...
 
     async def deposit(self, wallet_data: WalletDataOperationsSchema) -> WalletSchema:
@@ -38,25 +37,22 @@ class WalletServiceImpl:
         if not wallet_service:
             raise NotFoundError(wallet_id)
 
-
         return wallet_service
 
-    async def deposit(self,wallet_data: WalletDataOperationsSchema ) -> WalletSchema:
-
-        wallet_model_id = await self.wallet_factory_repository.get_by_id(wallet_data.uuid)
-        if not wallet_model_id:
+    async def deposit(self, wallet_data: WalletDataOperationsSchema) -> WalletSchema:
+        try:
+            updated_wallet = await self.wallet_factory_repository.deposit_wallet(wallet_data.uuid, wallet_data.amount)
+        except:
             raise NotFoundError(wallet_data.uuid)
-        wallet_balance = wallet_model_id.balance + wallet_data.amount
-        return await self.wallet_factory_repository.update(wallet_data.uuid, balance=wallet_balance)
+        return updated_wallet
 
     async def withdraw(self, wallet_data: WalletDataOperationsSchema) -> WalletSchema:
-        wallet_model_id = await self.wallet_factory_repository.get_by_id(wallet_data.uuid)
-
-        if not wallet_model_id:
-            raise NotFoundError(wallet_data.uuid)
-        if wallet_model_id.balance < wallet_data.amount:
-            raise BalanceError(wallet_data.uuid)
-
-        wallet_balance = wallet_model_id.balance - wallet_data.amount
-        return await self.wallet_factory_repository.update(wallet_data.uuid, balance=wallet_balance)
-
+        try:
+            updated_wallet = await self.wallet_factory_repository.withdraw_wallet(wallet_data.uuid, wallet_data.amount)
+        except:
+            wallet = await self.wallet_factory_repository.get_by_id(wallet_data.uuid)
+            if not wallet:
+                raise NotFoundError(wallet_data.uuid)
+            else:
+                raise BalanceError(wallet_data.uuid)
+        return updated_wallet

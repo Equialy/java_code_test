@@ -5,6 +5,11 @@ from fastapi import APIRouter, status
 from src.apps.wallets.depends import WalletService
 from src.apps.wallets.schemas import WalletResponseSchema
 from src.apps.wallets.schemas.schemas import WalletCreate, WalletDataOperationsSchema
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 
 router = APIRouter(prefix="/api/v1/wallets", tags=["wallets"])
 
@@ -12,6 +17,7 @@ router = APIRouter(prefix="/api/v1/wallets", tags=["wallets"])
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_wallet(user_service: WalletService, create_objects: WalletCreate) -> WalletResponseSchema:
     """Создание кошелька"""
+    logger.info("Создание колшелька")
     wallet = await user_service.create_wallet(create_objects)
     return wallet
 

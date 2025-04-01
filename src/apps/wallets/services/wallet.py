@@ -5,6 +5,9 @@ from src.apps.wallets.exceptions import NotFoundError, BalanceError
 from src.apps.wallets.repositories import WalletRepositoryProtocol
 from src.apps.wallets.schemas import WalletSchema
 from src.apps.wallets.schemas.schemas import WalletCreate, WalletDataOperationsSchema
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class WalletServiceProtocol(Protocol):
@@ -28,6 +31,8 @@ class WalletServiceImpl:
         self.wallet_factory_repository = wallet_factory_repository
 
     async def create_wallet(self, create_objects: WalletCreate) -> WalletSchema:
+        validate_schema = WalletCreate.model_validate(create_objects)
+        logger.info("Validation schema create wallet %s", validate_schema)
         wallet_service = await self.wallet_factory_repository.create(create_objects)
         return wallet_service
 
@@ -35,6 +40,7 @@ class WalletServiceImpl:
 
         wallet_service = await self.wallet_factory_repository.get_by_id(wallet_id=wallet_id)
         if not wallet_service:
+            logger.error("Неверный UUID")
             raise NotFoundError(wallet_id)
 
         return wallet_service
@@ -43,6 +49,7 @@ class WalletServiceImpl:
         try:
             updated_wallet = await self.wallet_factory_repository.deposit_wallet(wallet_data.uuid, wallet_data.amount)
         except:
+            logger.error("Неверный UUID")
             raise NotFoundError(wallet_data.uuid)
         return updated_wallet
 
@@ -52,7 +59,9 @@ class WalletServiceImpl:
         except:
             wallet = await self.wallet_factory_repository.get_by_id(wallet_data.uuid)
             if not wallet:
+                logger.error("Неверный UUID")
                 raise NotFoundError(wallet_data.uuid)
             else:
+                logger.error("Недостаточно средств " )
                 raise BalanceError(wallet_data.uuid)
         return updated_wallet

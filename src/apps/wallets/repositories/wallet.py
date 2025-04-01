@@ -4,6 +4,9 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 import sqlalchemy as sa
+import logging
+
+logger = logging.getLogger(__name__)
 
 from ..models import Wallet
 from ..schemas import WalletSchema
@@ -32,9 +35,11 @@ class WalletRepositoryImpl:
         self.model = Wallet
 
     async def create(self, create_objects: WalletCreate):
+
         stmt = sa.insert(self.model).values(create_objects.model_dump()).returning(self.model)
         model = await self.session.execute(stmt)
         result = model.scalar_one()
+        logger.info("Кошелек %r создан", result.uuid)
         return result
 
     async def get_by_id(self, wallet_id: UUID):
@@ -43,6 +48,7 @@ class WalletRepositoryImpl:
         return result.scalar_one_or_none()
 
     async def deposit_wallet(self, wallet_id: UUID, amount: Decimal):
+
         stmt = (sa.update(self.model)
                 .where(self.model.uuid == wallet_id)
                 .values(balance=self.model.balance + amount)

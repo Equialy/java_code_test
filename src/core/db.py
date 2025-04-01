@@ -1,12 +1,13 @@
+import logging
 from typing import  AsyncGenerator
 
 from sqlalchemy import NullPool
-from sqlalchemy.ext.asyncio import  AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine, async_scoped_session
 from sqlalchemy.orm import DeclarativeBase
 
 from src.settings import settings
 
-
+logger = logging.getLogger(__name__)
 
 if settings.test == 1:
     DB_URL = settings.test_db.url_db_test

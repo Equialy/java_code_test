@@ -32,8 +32,17 @@ class WalletDataOperationsSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True,
                               alias_generator=AliasGenerator(serialization_alias=to_camel))
 
+class WalletToOperation(BaseModel):
+    uuid: UUID
 
+    model_config = ConfigDict(from_attributes=True,
+                              alias_generator=AliasGenerator(serialization_alias=to_camel))
+class WalletTransferSchema(BaseModel):
+    wallet_from: WalletDataOperationsSchema
+    wallet_to: WalletToOperation
 
+    model_config = ConfigDict(from_attributes=True,
+                              alias_generator=AliasGenerator(serialization_alias=to_camel))
 class WalletCreate(BaseModel):
     balance: Optional[Decimal] = Field(default=Decimal("0.00"), ge=0)
 

@@ -4,7 +4,8 @@ from uuid import UUID
 from src.apps.wallets.exceptions import NotFoundError, BalanceError
 from src.apps.wallets.repositories import WalletRepositoryProtocol
 from src.apps.wallets.schemas import WalletSchema
-from src.apps.wallets.schemas.schemas import WalletCreate, WalletDataOperationsSchema
+from src.apps.wallets.schemas.schemas import WalletCreate, WalletDataOperationsSchema, WalletTransferSchema, \
+    WalletResponseSchema
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,8 @@ class WalletServiceProtocol(Protocol):
     async def withdraw(self, wallet_data: WalletDataOperationsSchema) -> WalletSchema:
         ...
 
+    async def transfer(self, wallet_data: WalletTransferSchema) -> WalletSchema:
+        ...
 
 class WalletServiceImpl:
 
@@ -65,4 +68,13 @@ class WalletServiceImpl:
                 logger.error("Недостаточно средств " )
                 raise BalanceError(wallet_data.uuid)
                 # raise ValueError(f"Not enough balance {wallet}")
+        return updated_wallet
+
+    async def transfer(self, wallet_data: WalletTransferSchema) -> tuple[
+        WalletResponseSchema, WalletResponseSchema]:
+        try:
+            updated_wallet = await self.wallet_factory_repository.transfer_user(wallet_data)
+        except Exception as e:
+            logger.error("error transfer: %r", e)
+            raise e
         return updated_wallet

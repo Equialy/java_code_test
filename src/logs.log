@@ -6,3 +6,23 @@
 [2025-04-14 19:39:43.950]  router:20  INFO    - Создание колшелька
 [2025-04-14 19:39:43.950]  wallet:35  INFO    - Validation schema create wallet balance=Decimal('0')
 [2025-04-14 19:39:43.960]  wallet:42  INFO    - Кошелек UUID('d3e47c47-3056-4b4a-9d1b-a61c77dba614') создан
+[2025-04-14 20:51:00.417]  wallet:65  ERROR   - Недостаточно средств 
+[2025-04-14 20:51:00.419] exceptions:68  ERROR   - Exception Balance: (uuid: d3e47c47-3056-4b4a-9d1b-a61c77dba614 , msg: Недостаточно средств)
+[2025-04-14 20:52:51.359]  wallet:65  ERROR   - Недостаточно средств 
+[2025-04-14 20:52:51.360] exceptions:68  ERROR   - Exception Balance: (uuid: d3e47c47-3056-4b4a-9d1b-a61c77dba614 , msg: Недостаточно средств)
+[2025-04-14 21:25:54.438]  wallet:81  ERROR   - Недостаточно средств 
+[2025-04-14 21:26:10.383]  wallet:81  ERROR   - Недостаточно средств 
+[2025-04-14 21:26:10.384] exceptions:68  ERROR   - Exception Balance: (uuid: d3e47c47-3056-4b4a-9d1b-a61c77dba614 , msg: Недостаточно средств)
+[2025-04-14 21:28:45.932]  wallet:81  ERROR   - Недостаточно средств 
+[2025-04-14 21:28:45.932] exceptions:68  ERROR   - Exception Balance: (uuid: d3e47c47-3056-4b4a-9d1b-a61c77dba614 , msg: Недостаточно средств)
+[2025-04-14 21:29:01.378]  wallet:81  ERROR   - Недостаточно средств 
+[2025-04-14 21:29:01.379] exceptions:68  ERROR   - Exception Balance: (uuid: 8fa5890b-2b69-4ba1-8707-a9118dc5ad1e , msg: Недостаточно средств)
+[2025-04-14 21:55:25.946]  wallet:78  ERROR   - error transfer: ValueError('Insufficient funds or wallet not found')
+[2025-04-14 21:55:30.265]  wallet:78  ERROR   - error transfer: ValueError('Insufficient funds or wallet not found')
+[2025-04-14 21:56:10.984]  wallet:78  ERROR   - error transfer: NotFoundError()
+[2025-04-14 21:56:25.960]  wallet:78  ERROR   - error transfer: BalanceError(UUID('d3e47c47-3056-4b4a-9d1b-a61c77dba614'))
+[2025-04-14 21:56:25.960] exceptions:68  ERROR   - Exception Balance: (uuid: d3e47c47-3056-4b4a-9d1b-a61c77dba614 , msg: Недостаточно средств)
+[2025-04-14 21:57:03.992]  wallet:78  ERROR   - error transfer: BalanceError(UUID('d3e47c47-3056-4b4a-9d1b-a61c77dba614'))
+[2025-04-14 21:57:03.993] exceptions:68  ERROR   - Exception Balance: (uuid: d3e47c47-3056-4b4a-9d1b-a61c77dba614 , msg: Недостаточно средств)
+[2025-04-14 21:57:05.195]  wallet:78  ERROR   - error transfer: BalanceError(UUID('d3e47c47-3056-4b4a-9d1b-a61c77dba614'))
+[2025-04-14 21:57:05.195] exceptions:68  ERROR   - Exception Balance: (uuid: d3e47c47-3056-4b4a-9d1b-a61c77dba614 , msg: Недостаточно средств)

@@ -6,11 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import sqlalchemy as sa
 import logging
 
+from ..exceptions import NotFoundError, BalanceError
+
 logger = logging.getLogger(__name__)
 
 from ..models import Wallet
 from ..schemas import WalletSchema
-from ..schemas.schemas import WalletUpdateSchema, WalletCreate, WalletResponseSchema
+from ..schemas.schemas import  WalletCreate, WalletResponseSchema, WalletTransferSchema
 
 
 class WalletRepositoryProtocol(Protocol):
@@ -27,6 +29,10 @@ class WalletRepositoryProtocol(Protocol):
     async def withdraw_wallet(self, wallet_id: UUID, amount: Decimal) -> WalletSchema:
         ...
 
+    async def transfer_user(self, wallet_data: WalletTransferSchema) -> tuple[
+        WalletResponseSchema, WalletResponseSchema]:
+        ...
+
 
 class WalletRepositoryImpl:
 
@@ -35,7 +41,6 @@ class WalletRepositoryImpl:
         self.model = Wallet
 
     async def create(self, create_objects: WalletCreate):
-
         stmt = sa.insert(self.model).values(create_objects.model_dump()).returning(self.model)
         model = await self.session.execute(stmt)
         result = model.scalar_one()
@@ -48,7 +53,6 @@ class WalletRepositoryImpl:
         return result.scalar_one_or_none()
 
     async def deposit_wallet(self, wallet_id: UUID, amount: Decimal) -> WalletResponseSchema:
-
         stmt = (sa.update(self.model)
                 .where(self.model.uuid == wallet_id)
                 .values(balance=self.model.balance + amount)
@@ -64,3 +68,34 @@ class WalletRepositoryImpl:
                 .returning(self.model))
         result = await self.session.execute(stmt)
         return result.scalar_one()
+
+    async def transfer_user(self, wallet_data: WalletTransferSchema) -> tuple[
+        WalletResponseSchema, WalletResponseSchema]:
+        async with self.session.begin():
+            from_wallet = await self.get_by_id(wallet_data.wallet_from.uuid)
+            if not from_wallet or from_wallet.balance < wallet_data.wallet_from.amount:
+                raise BalanceError(wallet_data.wallet_from.uuid)
+
+            cte = (
+                sa.select(self.model.uuid,
+                          sa.case(
+                              (self.model.uuid == wallet_data.wallet_from.uuid,
+                               self.model.balance - wallet_data.wallet_from.amount),
+                              (self.model.uuid == wallet_data.wallet_to.uuid,
+                               self.model.balance + wallet_data.wallet_from.amount)
+                          ).label("new_balance")
+                      ).where(self.model.uuid.in_([
+                    wallet_data.wallet_from.uuid,
+                    wallet_data.wallet_to.uuid
+                ])
+                )
+                .cte("updates")
+            )
+            update_stmt = (
+                sa.update(self.model)
+                .values(balance=cte.c.new_balance)
+                .where(self.model.uuid == cte.c.uuid)
+                .returning(self.model)
+            )
+            result = await self.session.execute(update_stmt)
+            return tuple(result.scalars().all())

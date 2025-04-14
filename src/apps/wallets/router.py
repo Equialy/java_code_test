@@ -4,7 +4,7 @@ from fastapi import APIRouter, status
 
 from src.apps.wallets.depends import WalletService
 from src.apps.wallets.schemas import WalletResponseSchema
-from src.apps.wallets.schemas.schemas import WalletCreate, WalletDataOperationsSchema
+from src.apps.wallets.schemas.schemas import WalletCreate, WalletDataOperationsSchema, WalletTransferSchema
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,3 +38,9 @@ async def deposit(wallet_data: WalletDataOperationsSchema, user_service: WalletS
 async def withdraw(wallet_data: WalletDataOperationsSchema, user_service: WalletService) -> WalletResponseSchema:
     """Снятие со счета"""
     return await user_service.withdraw(wallet_data)
+
+"""перевод денег"""
+@router.post("/{wallet_id}/transfer")
+async def transfer(wallet_data: WalletTransferSchema, user_service: WalletService) -> tuple[
+        WalletResponseSchema, WalletResponseSchema]:
+    return await user_service.transfer(wallet_data)

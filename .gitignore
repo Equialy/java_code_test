@@ -3,4 +3,4 @@
 .env.docker-compose
 .idea
 __pycache__/
-src/logs.log
+logs.log

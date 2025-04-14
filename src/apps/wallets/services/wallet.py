@@ -72,9 +72,6 @@ class WalletServiceImpl:
 
     async def transfer(self, wallet_data: WalletTransferSchema) -> tuple[
         WalletResponseSchema, WalletResponseSchema]:
-        try:
-            updated_wallet = await self.wallet_factory_repository.transfer_user(wallet_data)
-        except Exception as e:
-            logger.error("error transfer: %r", e)
-            raise e
+        updated_wallet = await self.wallet_factory_repository.transfer_user(wallet_data)
+
         return updated_wallet

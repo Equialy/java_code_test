@@ -19,3 +19,14 @@ class ValidInputError(Exception):
     def __init__(self, message: str, *args: object) -> None:
         super().__init__(*args)
         self.message = message
+
+
+class TransferError(Exception): # Для общих ошибок перевода
+    def __init__(self, msg):
+        self.msg = msg
+
+class WalletNotFoundError(Exception): # Пример кастомного исключения
+    def __init__(self, wallet_id):
+        self.wallet_id = wallet_id
+        super().__init__(f"Wallet not found: {wallet_id}")
+

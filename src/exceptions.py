@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import ORJSONResponse
 
-from src.apps.wallets.exceptions import ValidInputError, BalanceError
+from src.apps.wallets.exceptions import ValidInputError, BalanceError, TransferError
 from src.core.utils.exceptions import (
     ModelAlreadyExistsError,
     ValidationError,
@@ -74,6 +74,13 @@ async def balance_error_handler(request: Request, error: BalanceError):
         }
     )
 
+async def transfer_error_handler(request: Request, error: TransferError):
+    return ORJSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "msg": error.msg
+        }
+    )
 def apply_exceptions_handlers(app: FastAPI) -> FastAPI:
     """
     Применяем глобальные обработчики исключений.
@@ -83,4 +90,5 @@ def apply_exceptions_handlers(app: FastAPI) -> FastAPI:
     app.add_exception_handler(RecordNotFoundError, record_not_found_error_handler)
     app.add_exception_handler(ValidInputError, valid_input_error_handler)
     app.add_exception_handler(BalanceError, balance_error_handler)
+    app.add_exception_handler(TransferError, transfer_error_handler)
     return app

@@ -6,13 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import sqlalchemy as sa
 import logging
 
-from ..exceptions import NotFoundError, BalanceError
+from ..exceptions import NotFoundError, BalanceError, TransferError
 
 logger = logging.getLogger(__name__)
 
 from ..models import Wallet
 from ..schemas import WalletSchema
-from ..schemas.schemas import  WalletCreate, WalletResponseSchema, WalletTransferSchema
+from ..schemas.schemas import WalletCreate, WalletResponseSchema, WalletTransferSchema
 
 
 class WalletRepositoryProtocol(Protocol):
@@ -69,33 +69,54 @@ class WalletRepositoryImpl:
         result = await self.session.execute(stmt)
         return result.scalar_one()
 
-    async def transfer_user(self, wallet_data: WalletTransferSchema) -> tuple[
-        WalletResponseSchema, WalletResponseSchema]:
-        async with self.session.begin():
-            from_wallet = await self.get_by_id(wallet_data.wallet_from.uuid)
-            if not from_wallet or from_wallet.balance < wallet_data.wallet_from.amount:
-                raise BalanceError(wallet_data.wallet_from.uuid)
+    async def transfer_user(self, wallet_data: WalletTransferSchema) -> tuple[WalletResponseSchema, WalletResponseSchema]:
 
-            cte = (
-                sa.select(self.model.uuid,
-                          sa.case(
-                              (self.model.uuid == wallet_data.wallet_from.uuid,
-                               self.model.balance - wallet_data.wallet_from.amount),
-                              (self.model.uuid == wallet_data.wallet_to.uuid,
-                               self.model.balance + wallet_data.wallet_from.amount)
-                          ).label("new_balance")
-                      ).where(self.model.uuid.in_([
-                    wallet_data.wallet_from.uuid,
-                    wallet_data.wallet_to.uuid
-                ])
-                )
-                .cte("updates")
+        uuid_from = wallet_data.wallet_from.uuid
+        uuid_to = wallet_data.wallet_to.uuid
+        amount = wallet_data.wallet_from.amount
+
+        if uuid_from == uuid_to:
+            raise TransferError("Cannot transfer funds to the same wallet.")
+
+        if amount < 0:
+            raise TransferError("Transfer amount cannot be negative.")
+        async with self.session.begin():
+            # --- НАЧАЛО КЛЮЧЕВОГО ИСПРАВЛЕНИЯ ДЛЯ DEADLOCK ---
+            # Определяем порядок блокировки по UUID
+            lock_order_uuids = sorted([uuid_from, uuid_to])
+
+            stmt = (
+                sa.select(self.model)
+                .where(self.model.uuid.in_(lock_order_uuids))
+                .order_by(self.model.uuid)  # Гарантируем порядок запроса блокировки
+                .with_for_update()
             )
-            update_stmt = (
-                sa.update(self.model)
-                .values(balance=cte.c.new_balance)
-                .where(self.model.uuid == cte.c.uuid)
-                .returning(self.model)
-            )
-            result = await self.session.execute(update_stmt)
-            return tuple(result.scalars().all())
+
+            result = await self.session.execute(stmt)
+            wallets = result.scalars().all()
+            # --- КОНЕЦ КЛЮЧЕВОГО ИСПРАВЛЕНИЯ ДЛЯ DEADLOCK ---
+
+            found_wallets = {w.uuid: w for w in wallets}
+
+            if uuid_from not in found_wallets:
+                logger.warning("Запись отправителя не найдена: %r", uuid_from)
+                raise NotFoundError(uuid_from)
+            if uuid_to not in found_wallets:
+                logger.warning("Запись получателя не найдена: %r", uuid_to)
+                raise NotFoundError(uuid_to)
+
+            from_wallet = found_wallets[uuid_from]
+            to_wallet = found_wallets[uuid_to]
+
+            if from_wallet.balance < amount:
+                raise BalanceError(uuid_from)
+
+            if amount > 0:
+                from_wallet.balance -= amount
+                to_wallet.balance += amount
+
+            # Конвертация в Pydantic схемы перед возвратом
+            response_from = WalletResponseSchema.model_validate(from_wallet)
+            response_to = WalletResponseSchema.model_validate(to_wallet)
+
+            return (response_from, response_to)

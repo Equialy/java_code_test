@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 from ..models import Wallet
 from ..schemas import WalletSchema
-from ..schemas.schemas import WalletUpdateSchema, WalletCreate
+from ..schemas.schemas import WalletUpdateSchema, WalletCreate, WalletResponseSchema
 
 
 class WalletRepositoryProtocol(Protocol):
@@ -47,7 +47,7 @@ class WalletRepositoryImpl:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def deposit_wallet(self, wallet_id: UUID, amount: Decimal):
+    async def deposit_wallet(self, wallet_id: UUID, amount: Decimal) -> WalletResponseSchema:
 
         stmt = (sa.update(self.model)
                 .where(self.model.uuid == wallet_id)

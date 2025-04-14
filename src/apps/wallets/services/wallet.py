@@ -64,4 +64,5 @@ class WalletServiceImpl:
             else:
                 logger.error("Недостаточно средств " )
                 raise BalanceError(wallet_data.uuid)
+                # raise ValueError(f"Not enough balance {wallet}")
         return updated_wallet

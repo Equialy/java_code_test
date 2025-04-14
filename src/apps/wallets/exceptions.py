@@ -8,10 +8,11 @@ class NotFoundError(RecordNotFoundError):
         super().__init__(uuid=uuid, message=self.message, *args)
 
 
-class BalanceError(ValidationError):
+class BalanceError(Exception):
     def __init__(self, uuid: UUID, *args) -> None:
+        self.uuid = uuid
         self.message = f"Недостаточно средств"
-        super().__init__(field=str(uuid), message=self.message, *args)
+        # super().__init__(field=str(uuid), message=self.message, *args)
 
 
 class ValidInputError(Exception):

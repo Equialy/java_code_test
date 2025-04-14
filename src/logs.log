@@ -1,0 +1,8 @@
+[2025-04-10 01:38:36.480]  wallet:65  ERROR   - Недостаточно средств 
+[2025-04-10 01:38:36.481] exceptions:68  ERROR   - Exception Balance: (uuid: ac95f724-12a8-4399-a0d1-e101f7fd2a59 , msg: Недостаточно средств)
+[2025-04-14 19:01:21.212]  router:20  INFO    - Создание колшелька
+[2025-04-14 19:01:21.213]  wallet:35  INFO    - Validation schema create wallet balance=Decimal('0')
+[2025-04-14 19:01:21.372]  wallet:42  INFO    - Кошелек UUID('8fa5890b-2b69-4ba1-8707-a9118dc5ad1e') создан
+[2025-04-14 19:39:43.950]  router:20  INFO    - Создание колшелька
+[2025-04-14 19:39:43.950]  wallet:35  INFO    - Validation schema create wallet balance=Decimal('0')
+[2025-04-14 19:39:43.960]  wallet:42  INFO    - Кошелек UUID('d3e47c47-3056-4b4a-9d1b-a61c77dba614') создан

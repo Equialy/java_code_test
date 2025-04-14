@@ -17,7 +17,8 @@ else:
     DB_PARAMS = {}
 
 asyncio_engine = create_async_engine(
-    DB_URL,  echo=settings.debug
+    DB_URL,
+    # echo=settings.debug
 )
 
 AsyncSessionFactory = async_sessionmaker(

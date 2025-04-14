@@ -1,0 +1,2 @@
+[alias]
+    lol = log --pretty=format:"%h | %ad | %s [%an]" --date=iso --reverse
